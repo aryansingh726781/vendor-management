@@ -7,7 +7,7 @@ const cors = require("cors");
 const { expressjwt: jwtMiddleware } = require("express-jwt");
 require("dotenv").config();
 
-
+const MONGO_URI ="mongodb+srv://aryansingh726781:t9qpMG27eZMEIqpC@cluster0.hmrc3.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0"
 const app = express();
 app.use(express.json());
 
@@ -19,7 +19,7 @@ app.use(cors({
 
 
 // MongoDB connection
-mongoose.connect(process.env.MONGO_URI, {
+mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 30000, 
