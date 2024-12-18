@@ -22,6 +22,7 @@ app.use(cors({
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 30000, 
 }).then(() => console.log("MongoDB connected"))
   .catch(err => console.error(err));
 
@@ -75,48 +76,102 @@ const productValidator = Joi.object({
 // Routes
 // 1.  Registration
 
-app.post("/api/vendors/register", async (req, res) => {
-    // Log incoming request body for debugging
-    console.log("Request body:", req.body);
+// app.post("/api/vendors/register", async (req, res) => {
+//     // Log incoming request body for debugging
+//     console.log("Request body:", req.body);
   
-    // Validate incoming data using Joi schema
+//     // Validate incoming data using Joi schema
+//     const { error } = vendorValidator.validate(req.body);
+//     if (error) {
+//       // Send a 400 Bad Request response with the validation error message
+//       return res.status(400).json({ message: error.details[0].message });
+//     }
+  
+//     const { name, email, password } = req.body;
+  
+//     try {
+//       // Check if the vendor already exists
+
+
+//       const existingVendor = await Vendor.findOne({ email });
+//       if (existingVendor) {
+//         // If vendor exists, return a 400 error
+//         return res.status(400).json({ message: "Email already exists" });
+//       }
+  
+//       // Hash the password before saving it to the database
+//       const hashedPassword = await bcrypt.hash(password, 10);
+  
+//       // Create a new vendor document
+//       const vendor = new Vendor({
+//         name,
+//         email,
+//         password: hashedPassword,
+//       });
+  
+//       // Save the vendor to the database
+//       await vendor.save();
+  
+//       // Respond with a success message
+//       res.status(201).json({ message: "Vendor registered successfully" });
+//     } catch (err) {
+//       // Handle server errors
+//       console.error("Server error:", err);
+//       res.status(500).json({ message: "Server error, please try again later" });
+//     }
+//   });
+
+
+
+
+
+app.post("/api/vendors/register", async (req, res) => {
+  try {
+    // Log the incoming request body for debugging
+    console.log("Incoming Request:", req.body);
+
+    // Validate request payload using Joi or other schema validation
     const { error } = vendorValidator.validate(req.body);
     if (error) {
-      // Send a 400 Bad Request response with the validation error message
+      console.log("Validation Error:", error.details[0].message); // Log validation error
       return res.status(400).json({ message: error.details[0].message });
     }
-  
+
     const { name, email, password } = req.body;
-  
-    try {
-      // Check if the vendor already exists
-      const existingVendor = await Vendor.findOne({ email });
-      if (existingVendor) {
-        // If vendor exists, return a 400 error
-        return res.status(400).json({ message: "Email already exists" });
-      }
-  
-      // Hash the password before saving it to the database
-      const hashedPassword = await bcrypt.hash(password, 10);
-  
-      // Create a new vendor document
-      const vendor = new Vendor({
-        name,
-        email,
-        password: hashedPassword,
-      });
-  
-      // Save the vendor to the database
-      await vendor.save();
-  
-      // Respond with a success message
-      res.status(201).json({ message: "Vendor registered successfully" });
-    } catch (err) {
-      // Handle server errors
-      console.error("Server error:", err);
-      res.status(500).json({ message: "Server error, please try again later" });
+
+    // Check if a vendor with the same email already exists
+    const existingVendor = await Vendor.findOne({ email });
+    if (existingVendor) {
+      console.log("Vendor already exists with email:", email); // Log duplicate email
+      return res.status(400).json({ message: "Email already exists" });
     }
-  });
+
+    // Hash the password for security
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create a new Vendor document
+    const vendor = new Vendor({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    // Save the vendor to the database
+    await vendor.save();
+
+    // Log successful registration
+    console.log("Vendor registered successfully:", vendor);
+
+    // Respond with success message
+    return res.status(201).json({ message: "Vendor registered successfully" });
+  } catch (err) {
+    // Log the error for debugging
+    console.error("Error during vendor registration:", err);
+
+    // Respond with server error message
+    return res.status(500).json({ message: "Server error, please try again later" });
+  }
+});
   
 
 // 2. Vendor Login
